@@ -23,7 +23,16 @@ import com.duckduckgo.app.statistics.pixels.Pixel
 import com.duckduckgo.autofill.api.domain.app.LoginCredentials
 import com.duckduckgo.autofill.api.store.AutofillStore
 import com.duckduckgo.autofill.impl.ui.credential.management.AutofillSettingsViewModel.Command
-import com.duckduckgo.autofill.impl.ui.credential.management.AutofillSettingsViewModel.Command.*
+import com.duckduckgo.autofill.impl.ui.credential.management.AutofillSettingsViewModel.Command.ExitCredentialMode
+import com.duckduckgo.autofill.impl.ui.credential.management.AutofillSettingsViewModel.Command.ExitListMode
+import com.duckduckgo.autofill.impl.ui.credential.management.AutofillSettingsViewModel.Command.ExitLockedMode
+import com.duckduckgo.autofill.impl.ui.credential.management.AutofillSettingsViewModel.Command.LaunchDeviceAuth
+import com.duckduckgo.autofill.impl.ui.credential.management.AutofillSettingsViewModel.Command.ShowCredentialMode
+import com.duckduckgo.autofill.impl.ui.credential.management.AutofillSettingsViewModel.Command.ShowDeviceUnsupportedMode
+import com.duckduckgo.autofill.impl.ui.credential.management.AutofillSettingsViewModel.Command.ShowDisabledMode
+import com.duckduckgo.autofill.impl.ui.credential.management.AutofillSettingsViewModel.Command.ShowLockedMode
+import com.duckduckgo.autofill.impl.ui.credential.management.AutofillSettingsViewModel.Command.ShowUserPasswordCopied
+import com.duckduckgo.autofill.impl.ui.credential.management.AutofillSettingsViewModel.Command.ShowUserUsernameCopied
 import com.duckduckgo.autofill.impl.ui.credential.management.AutofillSettingsViewModel.CredentialMode
 import com.duckduckgo.autofill.impl.ui.credential.management.AutofillSettingsViewModel.CredentialMode.EditingExisting
 import com.duckduckgo.autofill.impl.ui.credential.management.searching.CredentialListFilter
@@ -35,9 +44,11 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
@@ -55,6 +66,7 @@ class AutofillSettingsViewModelTest {
     private val deviceAuthenticator: DeviceAuthenticator = mock()
     private val credentialListFilter: CredentialListFilter = mock()
     private val faviconManager: FaviconManager = mock()
+    private val webUrlIdentifier: WebUrlIdentifier = mock()
     private val testee = AutofillSettingsViewModel(
         autofillStore = mockStore,
         clipboardInteractor = clipboardInteractor,
@@ -63,7 +75,13 @@ class AutofillSettingsViewModelTest {
         dispatchers = coroutineTestRule.testDispatcherProvider,
         credentialListFilter = credentialListFilter,
         faviconManager = faviconManager,
+        webUrlIdentifier = webUrlIdentifier,
     )
+
+    @Before
+    fun setup() {
+        whenever(webUrlIdentifier.isLikelyAUrl(anyOrNull())).thenReturn(true)
+    }
 
     @Test
     fun whenUserEnablesAutofillThenViewStateUpdatedToReflectChange() = runTest {
@@ -130,7 +148,7 @@ class AutofillSettingsViewModelTest {
             cancelAndIgnoreRemainingEvents()
         }
         testee.viewState.test {
-            assertEquals(CredentialMode.Viewing(credentials), this.awaitItem().credentialMode)
+            assertEquals(CredentialMode.Viewing(credentials, showLinkButton = true), this.awaitItem().credentialMode)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -145,7 +163,39 @@ class AutofillSettingsViewModelTest {
             cancelAndIgnoreRemainingEvents()
         }
         testee.viewState.test {
-            assertEquals(CredentialMode.Viewing(credentials), this.awaitItem().credentialMode)
+            assertEquals(CredentialMode.Viewing(credentials, showLinkButton = true), this.awaitItem().credentialMode)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun whenOnViewCredentialsCalledWithWebsiteThenShowLinkButton() = runTest {
+        whenever(webUrlIdentifier.isLikelyAUrl(anyOrNull())).thenReturn(true)
+        val credentials = someCredentials()
+        testee.onViewCredentials(credentials)
+
+        testee.commands.test {
+            assertEquals(ShowCredentialMode, awaitItem().first())
+            cancelAndIgnoreRemainingEvents()
+        }
+        testee.viewState.test {
+            assertEquals(CredentialMode.Viewing(credentials, showLinkButton = true), this.awaitItem().credentialMode)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun whenOnViewCredentialsCalledWithoutValidWebsiteThenHideLinkButton() = runTest {
+        whenever(webUrlIdentifier.isLikelyAUrl(anyOrNull())).thenReturn(false)
+        val credentials = someCredentials()
+        testee.onViewCredentials(credentials)
+
+        testee.commands.test {
+            assertEquals(ShowCredentialMode, awaitItem().first())
+            cancelAndIgnoreRemainingEvents()
+        }
+        testee.viewState.test {
+            assertEquals(CredentialMode.Viewing(credentials, showLinkButton = false), this.awaitItem().credentialMode)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -297,7 +347,7 @@ class AutofillSettingsViewModelTest {
         testee.onCancelEditMode()
 
         testee.viewState.test {
-            assertEquals(CredentialMode.Viewing(credentials), this.awaitItem().credentialMode)
+            assertEquals(CredentialMode.Viewing(credentials, showLinkButton = true), this.awaitItem().credentialMode)
             cancelAndIgnoreRemainingEvents()
         }
     }
