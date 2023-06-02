@@ -294,6 +294,7 @@ class TrackerBlockingVpnService : VpnService(), CoroutineScope by MainScope(), V
 
         vpnNetworkStack.onPrepareVpn().getOrNull().also {
             if (it != null) {
+                logcat{ "VPN log: VpnTunnelConfig excluded ${it.appExclusionList.size} with $it" }
                 activeTun = createTunnelInterface(it)
                 activeTun?.let { tun ->
                     if (!tun.waitForTunellUpOrTimeout()) {

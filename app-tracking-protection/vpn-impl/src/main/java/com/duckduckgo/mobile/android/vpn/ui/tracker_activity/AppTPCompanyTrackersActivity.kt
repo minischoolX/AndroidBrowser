@@ -49,6 +49,10 @@ import com.duckduckgo.mobile.android.vpn.di.AppTpBreakageCategories
 import com.duckduckgo.mobile.android.vpn.pixels.DeviceShieldPixels
 import com.duckduckgo.mobile.android.vpn.ui.AppBreakageCategory
 import com.duckduckgo.mobile.android.vpn.ui.onboarding.DeviceShieldFAQActivity
+import com.duckduckgo.mobile.android.vpn.ui.tracker_activity.AppTPCompanyTrackersViewModel.BannerState
+import com.duckduckgo.mobile.android.vpn.ui.tracker_activity.AppTPCompanyTrackersViewModel.BannerState.NONE
+import com.duckduckgo.mobile.android.vpn.ui.tracker_activity.AppTPCompanyTrackersViewModel.BannerState.SHOW_UNPROTECTED
+import com.duckduckgo.mobile.android.vpn.ui.tracker_activity.AppTPCompanyTrackersViewModel.BannerState.SHOW_UNPROTECTED_THROUGH_NETP
 import com.duckduckgo.mobile.android.vpn.ui.tracker_activity.AppTPCompanyTrackersViewModel.Command
 import com.duckduckgo.mobile.android.vpn.ui.tracker_activity.AppTPCompanyTrackersViewModel.ViewState
 import com.duckduckgo.mobile.android.vpn.ui.util.TextDrawable
@@ -158,26 +162,20 @@ class AppTPCompanyTrackersActivity : DuckDuckGoActivity() {
             itemsAdapter.updateData(viewState.trackingCompanies)
         }
 
-        binding.appDisabledInfoPanel.apply {
-            setClickableLink(
-                InfoPanel.REPORT_ISSUES_ANNOTATION,
-                getText(R.string.atp_CompanyDetailsAppInfoPanel),
-            ) { launchFeedback() }
-            show()
-        }
+        setToggleState(viewState.toggleEnabled)
+        binding.handleProtectionState(viewState.bannerState)
+    }
 
-        if (viewState.userChangedState) {
-            if (viewState.manualProtectionState) {
-                binding.appDisabledInfoPanel.gone()
-            } else {
-                binding.appDisabledInfoPanel.show()
-            }
-        } else {
-            setToggleState(viewState.protectionEnabled)
-            if (viewState.protectionEnabled) {
-                binding.appDisabledInfoPanel.gone()
-            } else {
-                binding.appDisabledInfoPanel.show()
+    private fun ActivityApptpCompanyTrackersActivityBinding.handleProtectionState(bannerState: BannerState) {
+        when (bannerState) {
+            NONE -> appDisabledInfoPanel.gone()
+            SHOW_UNPROTECTED -> appDisabledInfoPanel.show()
+            SHOW_UNPROTECTED_THROUGH_NETP -> {
+                appDisabledInfoPanel.setClickableLink(
+                    InfoPanel.REPORT_ISSUES_ANNOTATION,
+                    getText(R.string.atp_CompanyDetailsAppInfoPanel),
+                ) { launchFeedback() }
+                appDisabledInfoPanel.show()
             }
         }
     }
@@ -212,7 +210,7 @@ class AppTPCompanyTrackersActivity : DuckDuckGoActivity() {
 
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
         cachedState?.let { vpnState ->
-            appEnabledSwitch.quietlySetIsChecked(vpnState.protectionEnabled, toggleAppSwitchListener)
+            appEnabledSwitch.quietlySetIsChecked(vpnState.toggleEnabled, toggleAppSwitchListener)
             cachedState = null
         }
 

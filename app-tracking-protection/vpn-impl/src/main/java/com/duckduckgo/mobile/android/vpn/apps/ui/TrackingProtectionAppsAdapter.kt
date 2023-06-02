@@ -177,6 +177,7 @@ class TrackingProtectionAppViewHolder(val binding: RowExclusionListAppBinding) :
         return when (excludingReason) {
             TrackingProtectionAppInfo.LOADS_WEBSITES_EXCLUSION_REASON, TrackingProtectionAppInfo.KNOWN_ISSUES_EXCLUSION_REASON ->
                 context.getString(R.string.atp_ExcludedReasonIssuesMayOccur)
+            TrackingProtectionAppInfo.EXCLUDED_THROUGH_NETP -> context.getString(R.string.atp_ExcludedReasonExcludedThroughNetP)
             else -> ""
         }
     }
@@ -185,6 +186,7 @@ class TrackingProtectionAppViewHolder(val binding: RowExclusionListAppBinding) :
         return when (excludingReason) {
             TrackingProtectionAppInfo.KNOWN_ISSUES_EXCLUSION_REASON -> R.drawable.ic_apptp_alert
             TrackingProtectionAppInfo.LOADS_WEBSITES_EXCLUSION_REASON -> R.drawable.ic_apptp_alert
+            TrackingProtectionAppInfo.EXCLUDED_THROUGH_NETP -> R.drawable.ic_apptp_alert
             else -> 0
         }
     }

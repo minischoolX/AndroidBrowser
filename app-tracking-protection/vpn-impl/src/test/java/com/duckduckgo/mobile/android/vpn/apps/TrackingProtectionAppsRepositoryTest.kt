@@ -82,7 +82,7 @@ class TrackingProtectionAppsRepositoryTest {
         whenever(packageManager.getApplicationInfo("com.example.app2", 0))
             .thenReturn(ApplicationInfo().apply { packageName = "com.example.app2" })
 
-        val isEnabled = trackingProtectionAppsRepository.isAppProtectionEnabled("com.example.app2")
+        val isEnabled = trackingProtectionAppsRepository.getAppProtectionStatus("com.example.app2")
 
         assertFalse(isEnabled)
     }
@@ -92,7 +92,7 @@ class TrackingProtectionAppsRepositoryTest {
         whenever(packageManager.getApplicationInfo("com.example.app1", 0))
             .thenReturn(ApplicationInfo().apply { packageName = "com.example.app1" })
 
-        val isEnabled = trackingProtectionAppsRepository.isAppProtectionEnabled("com.example.app1")
+        val isEnabled = trackingProtectionAppsRepository.getAppProtectionStatus("com.example.app1")
 
         assertTrue(isEnabled)
     }
@@ -107,7 +107,7 @@ class TrackingProtectionAppsRepositoryTest {
                 },
             )
 
-        val isEnabled = trackingProtectionAppsRepository.isAppProtectionEnabled("com.example.game")
+        val isEnabled = trackingProtectionAppsRepository.getAppProtectionStatus("com.example.game")
 
         assertFalse(isEnabled)
     }
@@ -117,7 +117,7 @@ class TrackingProtectionAppsRepositoryTest {
         whenever(packageManager.getApplicationInfo("com.duckduckgo.mobile", 0))
             .thenReturn(ApplicationInfo().apply { packageName = "com.duckduckgo.mobile" })
 
-        val isEnabled = trackingProtectionAppsRepository.isAppProtectionEnabled("com.duckduckgo.mobile")
+        val isEnabled = trackingProtectionAppsRepository.getAppProtectionStatus("com.duckduckgo.mobile")
 
         assertFalse(isEnabled)
     }
@@ -127,7 +127,7 @@ class TrackingProtectionAppsRepositoryTest {
         whenever(packageManager.getApplicationInfo("com.example.unknown", 0))
             .thenReturn(ApplicationInfo().apply { packageName = "com.example.unknown" })
 
-        val isEnabled = trackingProtectionAppsRepository.isAppProtectionEnabled("com.example.unknown")
+        val isEnabled = trackingProtectionAppsRepository.getAppProtectionStatus("com.example.unknown")
 
         assertTrue(isEnabled)
     }
@@ -137,7 +137,7 @@ class TrackingProtectionAppsRepositoryTest {
         whenever(packageManager.getApplicationInfo("com.example.unknown", 0))
             .thenThrow(NameNotFoundException())
 
-        val isEnabled = trackingProtectionAppsRepository.isAppProtectionEnabled("com.example.unknown")
+        val isEnabled = trackingProtectionAppsRepository.getAppProtectionStatus("com.example.unknown")
 
         assertTrue(isEnabled)
     }

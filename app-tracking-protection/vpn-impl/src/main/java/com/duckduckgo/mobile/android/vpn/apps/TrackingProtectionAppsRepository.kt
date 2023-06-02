@@ -20,11 +20,16 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import com.duckduckgo.app.global.DispatcherProvider
 import com.duckduckgo.di.scopes.AppScope
+import com.duckduckgo.mobile.android.vpn.apps.TrackingProtectionAppsRepository.ProtectionState
+import com.duckduckgo.mobile.android.vpn.apps.TrackingProtectionAppsRepository.ProtectionState.PROTECTED
+import com.duckduckgo.mobile.android.vpn.apps.TrackingProtectionAppsRepository.ProtectionState.UNPROTECTED
+import com.duckduckgo.mobile.android.vpn.apps.TrackingProtectionAppsRepository.ProtectionState.UNPROTECTED_THROUGH_NETP
 import com.duckduckgo.mobile.android.vpn.feature.AppTpFeatureConfig
 import com.duckduckgo.mobile.android.vpn.feature.AppTpSetting
 import com.duckduckgo.mobile.android.vpn.trackers.AppTrackerExcludedPackage
 import com.duckduckgo.mobile.android.vpn.trackers.AppTrackerManualExcludedApp
 import com.duckduckgo.mobile.android.vpn.trackers.AppTrackerRepository
+import com.duckduckgo.networkprotection.api.NetworkProtectionExclusionList
 import com.squareup.anvil.annotations.ContributesBinding
 import dagger.SingleInstanceIn
 import javax.inject.Inject
@@ -52,7 +57,12 @@ interface TrackingProtectionAppsRepository {
     suspend fun restoreDefaultProtectedList()
 
     /** Returns if an app tracking attempts are being blocked or not */
-    suspend fun isAppProtectionEnabled(packageName: String): Boolean
+    suspend fun getAppProtectionStatus(packageName: String): ProtectionState
+    enum class ProtectionState {
+        PROTECTED,
+        UNPROTECTED,
+        UNPROTECTED_THROUGH_NETP
+    }
 }
 
 @ContributesBinding(AppScope::class)
@@ -62,6 +72,7 @@ class RealTrackingProtectionAppsRepository @Inject constructor(
     private val appTrackerRepository: AppTrackerRepository,
     private val dispatcherProvider: DispatcherProvider,
     private val appTpFeatureConfig: AppTpFeatureConfig,
+    private val networkProtectionExclusionList: NetworkProtectionExclusionList,
 ) : TrackingProtectionAppsRepository {
 
     private var installedApps: Sequence<ApplicationInfo> = emptySequence()
@@ -77,7 +88,7 @@ class RealTrackingProtectionAppsRepository @Inject constructor(
                             packageName = it.packageName,
                             name = packageManager.getApplicationLabel(it).toString(),
                             category = it.parseAppCategory(),
-                            isExcluded = isExcluded,
+                            isExcluded = networkProtectionExclusionList.isExcluded(it.packageName) || isExcluded,
                             knownProblem = hasKnownIssue(it, ddgExclusionList),
                             userModified = isUserModified(it.packageName, manualList),
                         )
@@ -163,6 +174,9 @@ class RealTrackingProtectionAppsRepository @Inject constructor(
         if (appInfo.isGame() && !appTpFeatureConfig.isEnabled(AppTpSetting.ProtectGames)) {
             return TrackingProtectionAppInfo.KNOWN_ISSUES_EXCLUSION_REASON
         }
+        if (networkProtectionExclusionList.isExcluded(appInfo.packageName)) {
+            return TrackingProtectionAppInfo.EXCLUDED_THROUGH_NETP
+        }
         return TrackingProtectionAppInfo.NO_ISSUES
     }
 
@@ -192,15 +206,19 @@ class RealTrackingProtectionAppsRepository @Inject constructor(
         }
     }
 
-    override suspend fun isAppProtectionEnabled(packageName: String): Boolean {
+    override suspend fun getAppProtectionStatus(packageName: String): ProtectionState {
         logcat { "TrackingProtectionAppsRepository: Checking $packageName protection status" }
-        val appInfo = runCatching { packageManager.getApplicationInfo(packageName, 0) }.getOrElse { return true }
+        val appInfo = runCatching { packageManager.getApplicationInfo(packageName, 0) }.getOrElse { return PROTECTED }
         val appExclusionList = appTrackerRepository.getAppExclusionList()
         val manualAppExclusionList = appTrackerRepository.getManualAppExclusionList()
 
         val isExcluded = shouldBeExcluded(appInfo, appExclusionList, manualAppExclusionList)
 
-        return !isExcluded
+        return if (networkProtectionExclusionList.isExcluded(packageName) && !isExcluded) {
+            UNPROTECTED_THROUGH_NETP
+        } else if (isExcluded) {
+            UNPROTECTED
+        } else PROTECTED
     }
 
     companion object {
