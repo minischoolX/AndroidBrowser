@@ -187,6 +187,7 @@ class SettingsActivity : DuckDuckGoActivity() {
         viewModel.start(notificationsEnabled)
         viewModel.startPollingAppTpEnableState()
         viewModel.startPollingNetPEnableState()
+        viewModel.startPollingSyncEnableState()
     }
 
     override fun onResume() {

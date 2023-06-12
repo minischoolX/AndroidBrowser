@@ -59,6 +59,10 @@ import com.duckduckgo.networkprotection.impl.waitlist.store.NetPWaitlistReposito
 import com.duckduckgo.privacy.config.api.Gpc
 import com.duckduckgo.privacy.config.api.PrivacyFeatureName
 import com.duckduckgo.sync.api.DeviceSyncState
+import com.duckduckgo.sync.api.SyncState.FAILED
+import com.duckduckgo.sync.api.SyncState.IN_PROGRESS
+import com.duckduckgo.sync.api.SyncState.READY
+import com.duckduckgo.sync.api.SyncStateMonitor
 import com.duckduckgo.windows.api.WindowsDownloadLinkFeature
 import com.duckduckgo.windows.api.WindowsWaitlist
 import com.duckduckgo.windows.api.WindowsWaitlistFeature
@@ -97,6 +101,7 @@ class SettingsViewModel @Inject constructor(
     private val windowsWaitlist: WindowsWaitlist,
     private val windowsFeature: WindowsWaitlistFeature,
     private val deviceSyncState: DeviceSyncState,
+    private val syncStateMonitor: SyncStateMonitor,
     private val vpnStateMonitor: VpnStateMonitor,
     private val netpWaitlistRepository: NetPWaitlistRepository,
     private val windowsDownloadLinkFeature: WindowsDownloadLinkFeature,
@@ -233,6 +238,20 @@ class SettingsViewModel @Inject constructor(
                 delay(1_000)
             }
         }
+    }
+
+    fun startPollingSyncEnableState() {
+        syncStateMonitor.syncState()
+            .onEach {
+                viewState.value = currentViewState().copy(
+                    syncEnabled = when (it) {
+                        READY -> true
+                        IN_PROGRESS -> true
+                        FAILED -> true
+                        else -> false
+                    },
+                )
+            }.launchIn(viewModelScope)
     }
 
     fun startPollingNetPEnableState() {
@@ -389,11 +408,13 @@ class SettingsViewModel @Inject constructor(
                     settingsDataStore.showAppLinksPrompt = true
                     SETTINGS_APP_LINKS_ASK_EVERY_TIME_SELECTED
                 }
+
                 AppLinkSettingType.ALWAYS -> {
                     settingsDataStore.appLinksEnabled = true
                     settingsDataStore.showAppLinksPrompt = false
                     SETTINGS_APP_LINKS_ALWAYS_SELECTED
                 }
+
                 AppLinkSettingType.NEVER -> {
                     settingsDataStore.appLinksEnabled = false
                     settingsDataStore.showAppLinksPrompt = false
