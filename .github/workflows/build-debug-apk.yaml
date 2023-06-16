@@ -34,18 +34,20 @@ jobs:
         with:
           go-version: '1.18.3'
 
-      - name: Build
+      # Cache and restore the Gradle dependencies on multiple runs
+      - name: Gradle cache
         uses: gradle/gradle-build-action@v2
-        with:
-          arguments: assembleInternalDebug -Pforce-default-variant
 
-      - name: Obtain debug apk
-        if: always()
-        run: cp $(find . -regex '.*outputs/apk/.*internal-debug.apk') pr-ddg-debug.apk
-
-      - name: Upload debug apk
-        if: always()
-        uses: actions/upload-artifact@v3
+      # Run android assembleProdDebuggable
+      - name: Run Build
+        run: |
+          git submodule update --init
+          chmod +x gradlew
+          ./gradlew app:spotlessApply
+          ./gradlew app:assembleInternalDebug
+      # Uploads the folder or file in path to GitHub
+      - name: Upload Apk
+        uses: actions/upload-artifact@v2
         with:
-          name: pr-ddg-debug
-          path: pr-ddg-debug.apk
+          name: ddg
+          path: app/build/outputs/apk/
