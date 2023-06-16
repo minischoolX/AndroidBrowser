@@ -294,15 +294,15 @@ class BrowserWebViewClient @Inject constructor(
               let posterUrl = "";
 
               if (baseDimension < 320) {
-                posterUrl = `https://i.ytimg.com/vi_webp/${videoId}/default.webp`;
+                posterUrl = `https://i.ytimg.com/vi_webp/" + videoId + "/default.webp`;
               } else if (baseDimension < 480) {
-                posterUrl = `https://i.ytimg.com/vi_webp/${videoId}/mqdefault.webp`;
+                posterUrl = `https://i.ytimg.com/vi_webp/" + videoId + "/mqdefault.webp`;
               } else if (baseDimension < 640) {
-                posterUrl = `https://i.ytimg.com/vi_webp/${videoId}/hqdefault.webp`;
+                posterUrl = `https://i.ytimg.com/vi_webp/" + videoId + "/hqdefault.webp`;
               } else if (baseDimension < 1280) {
-                posterUrl = `https://i.ytimg.com/vi_webp/${videoId}/sddefault.webp`;
+                posterUrl = `https://i.ytimg.com/vi_webp/" + videoId + "/sddefault.webp`;
               } else {
-                posterUrl = `https://i.ytimg.com/vi_webp/${videoId}/maxresdefault.webp`;
+                posterUrl = `https://i.ytimg.com/vi_webp/" + videoId + "/maxresdefault.webp`;
               }
 
               // Set the poster attribute of the video element              
