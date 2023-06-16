@@ -232,12 +232,97 @@ class BrowserWebViewClient @Inject constructor(
         if (listener.linkOpenedInNewTab()) {
             webView.post {
                 webView.loadUrl(url)
+                videoPosterScript(webView)
             }
         } else {
             webView.loadUrl(url)
+            videoPosterScript(webView)
         }
     }
 
+    private fun videoPosterScript(view: WebView) {
+        val videoPosterCode = """
+            // Get the current URL
+            const currentURL = window.location.href;
+            const host = window.location.host;
+            const hasValidHost = host.includes("m.youtube.com") || host.includes("www.youtube.com") || host.includes("youtube.com");
+            const hasValidQuery = currentURL.includes("watch");
+
+            if (hasValidHost && hasValidQuery) {
+              function getVideoIdFromUrl(url) {
+                let id = "";
+                try {
+                  if (url.includes("youtu.be/")) {
+                    return url.substring(url.lastIndexOf("/") + 1);
+                  }
+
+                  const query = new URL(url).search;
+                  if (!query) return "";
+
+                  const params = new URLSearchParams(query);
+                  id = params.get("v");
+                } catch (e) {
+                  console.error(e);
+                }
+                return id;
+              }
+
+              const videoId = getVideoIdFromUrl(currentURL);
+
+              // Determine the client's device width and height
+              const deviceWidth = Math.min(
+                window.innerWidth ||
+                  document.documentElement.clientWidth ||
+                  document.body.clientWidth,
+                window.screen.width ||
+                  window.screen.availWidth ||
+                  document.documentElement.offsetWidth
+              );
+              const deviceHeight = Math.min(
+                window.innerHeight ||
+                  document.documentElement.clientHeight ||
+                  document.body.clientHeight,
+                window.screen.height ||
+                  window.screen.availHeight ||
+                  document.documentElement.offsetHeight
+              );
+
+              // Determine the larger dimension
+              const baseDimension = Math.max(deviceWidth, deviceHeight);
+
+              // Adjust the poster URL based on the larger dimension
+              let posterUrl = "";
+
+              if (baseDimension < 320) {
+                posterUrl = `https://i.ytimg.com/vi_webp/${videoId}/default.webp`;
+              } else if (baseDimension < 480) {
+                posterUrl = `https://i.ytimg.com/vi_webp/${videoId}/mqdefault.webp`;
+              } else if (baseDimension < 640) {
+                posterUrl = `https://i.ytimg.com/vi_webp/${videoId}/hqdefault.webp`;
+              } else if (baseDimension < 1280) {
+                posterUrl = `https://i.ytimg.com/vi_webp/${videoId}/sddefault.webp`;
+              } else {
+                posterUrl = `https://i.ytimg.com/vi_webp/${videoId}/maxresdefault.webp`;
+              }
+
+              // Set the poster attribute of the video element              
+              function waitForVideoElement() {
+                const videoElements = document.getElementsByTagName("video");
+                if (videoElements.length > 0) {
+                  const videoElement = videoElements[0];
+                  videoElement.setAttribute("poster", posterUrl);
+                } else {
+                  setTimeout(waitForVideoElement, 700);
+                }
+              }
+              waitForVideoElement();
+            }
+        """.trimIndent()
+
+        // Execute the videoPosterScript in the WebView
+        view.evaluateJavascript(videoPosterCode, null)
+    }
+    
     @UiThread
     override fun onPageStarted(
         webView: WebView,
