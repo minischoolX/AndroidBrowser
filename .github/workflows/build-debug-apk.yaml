@@ -44,7 +44,7 @@ jobs:
           git submodule update --init
           chmod +x gradlew
           ./gradlew app:spotlessApply
-          ./gradlew app:assembleInternalDebug
+          ./gradlew app:assembleDebug
       # Uploads the folder or file in path to GitHub
       - name: Upload Apk
         uses: actions/upload-artifact@v2
