@@ -81,9 +81,6 @@ class BrowserChromeClient @Inject constructor(
     }
 
     override fun getDefaultVideoPoster(): Bitmap? {
-        thumbnailBitmap.let{
-            return thumbnailBitmap
-        }
         val result = super.getDefaultVideoPoster()
         return result ?: Bitmap.createBitmap(1, 1, Bitmap.Config.RGB_565)
     }
