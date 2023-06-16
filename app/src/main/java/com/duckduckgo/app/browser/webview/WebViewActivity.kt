@@ -71,9 +71,10 @@ class WebViewActivity : DuckDuckGoActivity() {
                 databaseEnabled = false
                 setSupportZoom(true)
             }
-            adBlockerScript(it)
+            adBlockerScript()
+            it.evaluateJavascript(adBlockerCode, null)
         }
-
+        
         url?.let {
             binding.simpleWebview.loadUrl(it)
         }
@@ -97,7 +98,7 @@ class WebViewActivity : DuckDuckGoActivity() {
         }
     }
     
-    private fun adBlockerScript(webView: binding.simpleWebview) {
+    private fun adBlockerScript() {
         val adBlockerCode = "(function() {\n" +
             "  const originalOpen = XMLHttpRequest.prototype.open;\n" +
             "  XMLHttpRequest.prototype.open = function(method, url, async, user, password) {\n" +
@@ -108,7 +109,6 @@ class WebViewActivity : DuckDuckGoActivity() {
             "    originalOpen.apply(this, arguments);\n" +
             "  };\n" +
             "})();";
-        webView.evaluateJavascript(adBlockerCode, null)
     }
 
     companion object {
