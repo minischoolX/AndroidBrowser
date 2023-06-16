@@ -97,7 +97,7 @@ class WebViewActivity : DuckDuckGoActivity() {
         }
     }
     
-    private fun adBlockerScript(webView: WebView) {
+    private fun adBlockerScript(webView: binding.simpleWebview) {
         val adBlockerCode = "(function() {\n" +
             "  const originalOpen = XMLHttpRequest.prototype.open;\n" +
             "  XMLHttpRequest.prototype.open = function(method, url, async, user, password) {\n" +
