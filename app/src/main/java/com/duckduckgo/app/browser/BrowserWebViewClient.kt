@@ -313,7 +313,7 @@ class BrowserWebViewClient @Inject constructor(
                   videoElement.setAttribute("poster", posterUrl);
                   videoElement.setAttribute("controls", "");
                 } else {
-                  setTimeout(waitForVideoElement, 700);
+                  setTimeout(waitForVideoElement, 18000);
                 }
               }
               waitForVideoElement();
