@@ -17,6 +17,7 @@
 package com.duckduckgo.app.browser
 
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Message
 import android.view.View
@@ -77,6 +78,14 @@ class BrowserChromeClient @Inject constructor(
         webViewClientListener?.navigationStateChanged(WebViewNavigationState(navigationList, webView.progress))
         webViewClientListener?.progressChanged(webView.progress)
         webViewClientListener?.onCertificateReceived(webView.certificate)
+    }
+
+    override fun getDefaultVideoPoster(): Bitmap? {
+        thumbnailBitmap.let{
+            return thumbnailBitmap
+        }
+        val result = super.getDefaultVideoPoster()
+        return result ?: Bitmap.createBitmap(1, 1, Bitmap.Config.RGB_565)
     }
 
     override fun onReceivedIcon(
