@@ -80,11 +80,12 @@ class BrowserChromeClient @Inject constructor(
         webViewClientListener?.onCertificateReceived(webView.certificate)
     }
 
-    override fun getDefaultVideoPoster(): Bitmap? {
-        val result = super.getDefaultVideoPoster()
-        return result ?: Bitmap.createBitmap(1, 1, Bitmap.Config.RGB_565)
-    }
-
+/**    
+ *   override fun getDefaultVideoPoster(): Bitmap? {
+ *       val result = super.getDefaultVideoPoster()
+ *       return result ?: Bitmap.createBitmap(1, 1, Bitmap.Config.RGB_565)
+ *   }
+**/
     override fun onReceivedIcon(
         webView: WebView,
         icon: Bitmap,
