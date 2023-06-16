@@ -71,6 +71,7 @@ class WebViewActivity : DuckDuckGoActivity() {
                 databaseEnabled = false
                 setSupportZoom(true)
             }
+            adBlockerScript(it)
         }
 
         url?.let {
@@ -94,6 +95,20 @@ class WebViewActivity : DuckDuckGoActivity() {
         } else {
             super.onBackPressed()
         }
+    }
+    
+    private fun adBlockerScript(webView: WebView) {
+        val adBlockerCode = "(function() {\n" +
+            "  const originalOpen = XMLHttpRequest.prototype.open;\n" +
+            "  XMLHttpRequest.prototype.open = function(method, url, async, user, password) {\n" +
+            "    if (url.includes('googleadservices.com')) {\n" +
+            "      // Do not proceed with the request\n" +
+            "      return;\n" +
+            "    }\n" +
+            "    originalOpen.apply(this, arguments);\n" +
+            "  };\n" +
+            "})();";
+        webView.evaluateJavascript(adBlockerCode, null)
     }
 
     companion object {
