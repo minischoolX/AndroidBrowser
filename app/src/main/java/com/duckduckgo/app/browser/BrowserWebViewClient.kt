@@ -305,18 +305,24 @@ class BrowserWebViewClient @Inject constructor(
                 posterUrl = `https://i.ytimg.com/vi_webp/" + videoId + "/maxresdefault.webp`;
               }
 
+
+
+
+
+
+
+
               // Set the poster attribute of the video element              
-              function waitForVideoElement() {
-                const videoElements = document.getElementsByTagName("video");
-                if (videoElements.length > 0) {
-                  const videoElement = videoElements[0];
+
+              window.addEventListener('DOMContentLoaded', function() {
+                var videoElements = document.querySelector('video');
+             
+     
                   videoElement.setAttribute("poster", posterUrl);
-                  videoElement.setAttribute("controls", "");
-                } else {
-                  setTimeout(waitForVideoElement, 18000);
-                }
-              }
-              waitForVideoElement();
+         //         videoElement.setAttribute("controls", "");
+               
+              });
+      //        waitForVideoElement();
             }
         """.trimIndent()
 
