@@ -71,7 +71,16 @@ class WebViewActivity : DuckDuckGoActivity() {
                 databaseEnabled = false
                 setSupportZoom(true)
             }
-            adBlockerScript()
+            val adBlockerCode = "(function() {\n" +
+                "  const originalOpen = XMLHttpRequest.prototype.open;\n" +
+                "  XMLHttpRequest.prototype.open = function(method, url, async, user, password) {\n" +
+                "    if (url.includes('googleadservices.com')) {\n" +
+                "      // Do not proceed with the request\n" +
+                "      return;\n" +
+                "    }\n" +
+                "    originalOpen.apply(this, arguments);\n" +
+                "  };\n" +
+                "})();";
             it.evaluateJavascript(adBlockerCode, null)
         }
         
@@ -98,19 +107,6 @@ class WebViewActivity : DuckDuckGoActivity() {
         }
     }
     
-    private fun adBlockerScript() {
-        val adBlockerCode = "(function() {\n" +
-            "  const originalOpen = XMLHttpRequest.prototype.open;\n" +
-            "  XMLHttpRequest.prototype.open = function(method, url, async, user, password) {\n" +
-            "    if (url.includes('googleadservices.com')) {\n" +
-            "      // Do not proceed with the request\n" +
-            "      return;\n" +
-            "    }\n" +
-            "    originalOpen.apply(this, arguments);\n" +
-            "  };\n" +
-            "})();";
-    }
-
     companion object {
         const val URL_EXTRA = "URL_EXTRA"
         const val TITLE_EXTRA = "TITLE_EXTRA"
