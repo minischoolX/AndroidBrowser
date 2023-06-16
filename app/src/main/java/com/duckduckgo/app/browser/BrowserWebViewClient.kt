@@ -311,6 +311,7 @@ class BrowserWebViewClient @Inject constructor(
                 if (videoElements.length > 0) {
                   const videoElement = videoElements[0];
                   videoElement.setAttribute("poster", posterUrl);
+                  videoElement.setAttribute("controls", "");
                 } else {
                   setTimeout(waitForVideoElement, 700);
                 }
