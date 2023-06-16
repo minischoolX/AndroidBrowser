@@ -70,7 +70,7 @@ class WebViewActivity : DuckDuckGoActivity() {
                 setSupportMultipleWindows(true)
                 databaseEnabled = false
                 setSupportZoom(true)
-                MediaPlaybackRequiresUserGesture(false)
+                setMediaPlaybackRequiresUserGesture(false)
             }
             val adBlockerCode = "(function() {\n" +
                 "  const originalOpen = XMLHttpRequest.prototype.open;\n" +
