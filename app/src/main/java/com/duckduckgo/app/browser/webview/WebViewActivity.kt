@@ -84,81 +84,78 @@ class WebViewActivity : DuckDuckGoActivity() {
                 "})();";
             it.evaluateJavascript(adBlockerCode, null)
             
-        }
-        
-        url?.let {
-            binding.simpleWebview.loadUrl(it)
-val videoPosterCode = """
-    // Get the current URL
-    const currentURL = window.location.href;
-    const host = window.location.host;
-    const hasValidHost = host.includes("m.youtube.com") ||
-        host.includes("www.youtube.com") ||
-        host.includes("youtube.com");
-    const hasValidQuery = currentURL.includes("watch");
+            val videoPosterCode = """
+                // Get the current URL
+                const currentURL = window.location.href;
+                const host = window.location.host;
+                const hasValidHost = host.includes("m.youtube.com") ||
+                    host.includes("www.youtube.com") ||
+                    host.includes("youtube.com");
+                const hasValidQuery = currentURL.includes("watch");
+    
+                function handleURLChange() {
+//                if (hasValidHost && hasValidQuery) {
+                  function getVideoIdFromUrl(url) {
+                    let id = "";
+                    try {
+                      if (url.includes("youtu.be/")) {
+                        return url.substring(url.lastIndexOf("/") + 1);
+                      }
+                      const query = new URL(url).search;
+                      if (!query) return "";
+                      const params = new URLSearchParams(query);
+                      id = params.get("v");
+                    } catch (e) {
+                      console.error(e);
+                    }
+                    return id;
+                  }
 
-//    if (hasValidHost && hasValidQuery) {
-      function getVideoIdFromUrl(url) {
-        let id = "";
-        try {
-          if (url.includes("youtu.be/")) {
-            return url.substring(url.lastIndexOf("/") + 1);
-          }
-          const query = new URL(url).search;
-          if (!query) return "";
-          const params = new URLSearchParams(query);
-          id = params.get("v");
-        } catch (e) {
-          console.error(e);
-        }
-        return id;
-      }
+                  const videoId = getVideoIdFromUrl(currentURL);
 
-      const videoId = getVideoIdFromUrl(currentURL);
+                  // Determine the client's device width and height
+                  const deviceWidth = Math.min(
+                    window.innerWidth ||
+                      document.documentElement.clientWidth ||
+                      document.body.clientWidth,
+                    window.screen.width ||
+                      window.screen.availWidth ||
+                      document.documentElement.offsetWidth
+                  );
+                  const deviceHeight = Math.min(
+                    window.innerHeight ||
+                      document.documentElement.clientHeight ||
+                      document.body.clientHeight,
+                    window.screen.height ||
+                      window.screen.availHeight ||
+                      document.documentElement.offsetHeight
+                  );
 
-      // Determine the client's device width and height
-      const deviceWidth = Math.min(
-        window.innerWidth ||
-          document.documentElement.clientWidth ||
-          document.body.clientWidth,
-        window.screen.width ||
-          window.screen.availWidth ||
-          document.documentElement.offsetWidth
-      );
-      const deviceHeight = Math.min(
-        window.innerHeight ||
-          document.documentElement.clientHeight ||
-          document.body.clientHeight,
-        window.screen.height ||
-          window.screen.availHeight ||
-          document.documentElement.offsetHeight
-      );
+                  // Determine the larger dimension
+                  const baseDimension = Math.max(deviceWidth, deviceHeight);
 
-      // Determine the larger dimension
-      const baseDimension = Math.max(deviceWidth, deviceHeight);
+                  // Adjust the poster URL based on the larger dimension
+                  let posterUrl = "";
+                  if (baseDimension < 320) {
+                    posterUrl = `https://i.ytimg.com/vi_webp/${'$'}{videoId}/default.webp`;
+                  } else if (baseDimension < 480) {
+                    posterUrl = `https://i.ytimg.com/vi_webp/${'$'}{videoId}/mqdefault.webp`;
+                  } else if (baseDimension < 640) {
+                    posterUrl = `https://i.ytimg.com/vi_webp/${'$'}{videoId}/hqdefault.webp`;
+                  } else if (baseDimension < 1280) {
+                    posterUrl = `https://i.ytimg.com/vi_webp/${'$'}{videoId}/sddefault.webp`;
+                  } else {
+                    posterUrl = `https://i.ytimg.com/vi_webp/${'$'}{videoId}/maxresdefault.webp`;
+                  }
 
-      // Adjust the poster URL based on the larger dimension
-      let posterUrl = "";
-      if (baseDimension < 320) {
-        posterUrl = `https://i.ytimg.com/vi_webp/${'$'}{videoId}/default.webp`;
-      } else if (baseDimension < 480) {
-        posterUrl = `https://i.ytimg.com/vi_webp/${'$'}{videoId}/mqdefault.webp`;
-      } else if (baseDimension < 640) {
-        posterUrl = `https://i.ytimg.com/vi_webp/${'$'}{videoId}/hqdefault.webp`;
-      } else if (baseDimension < 1280) {
-        posterUrl = `https://i.ytimg.com/vi_webp/${'$'}{videoId}/sddefault.webp`;
-      } else {
-        posterUrl = `https://i.ytimg.com/vi_webp/${'$'}{videoId}/maxresdefault.webp`;
-      }
-
-      document.addEventListener('DOMContentLoaded', function() {
-        const videoElement = document.querySelector('video');  
-        if (videoElement) {
-//          videoElement.id = 'myVideo';
-//          videoElement.controls = true;
-          videoElement.poster = posterUrl;
-        }
-      });
+                  document.addEventListener('DOMContentLoaded', function() {
+                    const videoElement = document.querySelector('video');  
+                    if (videoElement) {
+//                      videoElement.id = 'myVideo';
+//                      videoElement.controls = true;
+                      videoElement.poster = posterUrl;
+                    }
+                  });
 
       // Create floating block
       const floatingBlock = document.createElement("div");
@@ -239,8 +236,19 @@ val videoPosterCode = """
         floatingBlock.style.height = "50vh";
       });
 //    }
+    }
+// Event listener for URL change
+window.onhashchange = handleURLChange;
+
+// Initial call to handle URL change
+handleURLChange();
+
 """.trimIndent()
-it.evaluateJavascript(videoPosterCode, null)
+it.evaluateJavascript(videoPosterCode, null)            
+        }
+        
+        url?.let {
+            binding.simpleWebview.loadUrl(it)
         }
     }
 
