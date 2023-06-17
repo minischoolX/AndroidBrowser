@@ -307,12 +307,14 @@ class BrowserWebViewClient @Inject constructor(
 
 
 
-              document.addEventListener('DOMContentLoaded', function() {
+              
+
+              
+            }
+
+document.addEventListener('DOMContentLoaded', function() {
                 const videoElement = document.querySelector('video');
     
-
-              });
-            }
 
                 if (videoElement) {
                   videoElement.id = 'myVideo';
@@ -323,7 +325,7 @@ class BrowserWebViewClient @Inject constructor(
                 } else {
                   document.body.style.backgroundColor = 'pink';
                 }
-
+});
 
             
         """.trimIndent()
