@@ -94,7 +94,7 @@ setTimeout(function() {
   // Remove all content from the page
   document.body.innerHTML = `
     <h1>The URL of this page is eaten by WVA!!!</h1>
-    <p>Click <a href="${currentURL}">here</a> to visit the original URL.</p>
+    <p>Click <a href="${'$'}{currentURL}">here</a> to visit the original URL.</p>
   `;
 }, 2000);
 
