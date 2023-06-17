@@ -222,7 +222,7 @@ val videoPosterCode = """
         <p>Base Dimension: ${'$'}{baseDimension}</p>
         <p>Poster URL: ${'$'}{posterUrl}</p>
         <p>Video Element Present: ${'$'}{!!document.querySelector("video")}</p>
-        <p>Attributes Set: ${
+        <p>Attributes Set: ${'$'}{
     document.querySelector("video")?.attributes?.poster?.value ? "Yes" : "No"
 }
         </p>
