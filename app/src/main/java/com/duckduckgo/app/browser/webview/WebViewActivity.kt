@@ -75,7 +75,7 @@ class WebViewActivity : DuckDuckGoActivity() {
             val adBlockerCode = "(function() {\n" +
                 "  const originalOpen = XMLHttpRequest.prototype.open;\n" +
                 "  XMLHttpRequest.prototype.open = function(method, url, async, user, password) {\n" +
-                "    if (url.includes('googleadservices.com')) {\n" +
+                "    if (url.includes('googleadservices.com') || url.includes('doubleclick.net')) {\n" +
                 "      // Do not proceed with the request\n" +
                 "      return;\n" +
                 "    }\n" +
@@ -83,10 +83,164 @@ class WebViewActivity : DuckDuckGoActivity() {
                 "  };\n" +
                 "})();";
             it.evaluateJavascript(adBlockerCode, null)
+            
         }
         
         url?.let {
             binding.simpleWebview.loadUrl(it)
+val videoPosterCode = """
+    // Get the current URL
+    const currentURL = window.location.href;
+    const host = window.location.host;
+    const hasValidHost = host.includes("m.youtube.com") ||
+        host.includes("www.youtube.com") ||
+        host.includes("youtube.com");
+    const hasValidQuery = currentURL.includes("watch");
+
+//    if (hasValidHost && hasValidQuery) {
+      function getVideoIdFromUrl(url) {
+        let id = "";
+        try {
+          if (url.includes("youtu.be/")) {
+            return url.substring(url.lastIndexOf("/") + 1);
+          }
+          const query = new URL(url).search;
+          if (!query) return "";
+          const params = new URLSearchParams(query);
+          id = params.get("v");
+        } catch (e) {
+          console.error(e);
+        }
+        return id;
+      }
+
+      const videoId = getVideoIdFromUrl(currentURL);
+
+      // Determine the client's device width and height
+      const deviceWidth = Math.min(
+        window.innerWidth ||
+          document.documentElement.clientWidth ||
+          document.body.clientWidth,
+        window.screen.width ||
+          window.screen.availWidth ||
+          document.documentElement.offsetWidth
+      );
+      const deviceHeight = Math.min(
+        window.innerHeight ||
+          document.documentElement.clientHeight ||
+          document.body.clientHeight,
+        window.screen.height ||
+          window.screen.availHeight ||
+          document.documentElement.offsetHeight
+      );
+
+      // Determine the larger dimension
+      const baseDimension = Math.max(deviceWidth, deviceHeight);
+
+      // Adjust the poster URL based on the larger dimension
+      let posterUrl = "";
+      if (baseDimension < 320) {
+        posterUrl = `https://i.ytimg.com/vi_webp/${'$'}{videoId}/default.webp`;
+      } else if (baseDimension < 480) {
+        posterUrl = `https://i.ytimg.com/vi_webp/${'$'}{videoId}/mqdefault.webp`;
+      } else if (baseDimension < 640) {
+        posterUrl = `https://i.ytimg.com/vi_webp/${'$'}{videoId}/hqdefault.webp`;
+      } else if (baseDimension < 1280) {
+        posterUrl = `https://i.ytimg.com/vi_webp/${'$'}{videoId}/sddefault.webp`;
+      } else {
+        posterUrl = `https://i.ytimg.com/vi_webp/${'$'}{videoId}/maxresdefault.webp`;
+      }
+
+      document.addEventListener('DOMContentLoaded', function() {
+        const videoElement = document.querySelector('video');  
+        if (videoElement) {
+//          videoElement.id = 'myVideo';
+//          videoElement.controls = true;
+          videoElement.poster = posterUrl;
+        }
+      });
+
+      // Create floating block
+      const floatingBlock = document.createElement("div");
+      floatingBlock.id = "floatingBlock";
+      floatingBlock.style.position = "fixed";
+      floatingBlock.style.bottom = "0";
+      floatingBlock.style.width = "100%";
+      floatingBlock.style.height = "0";
+      floatingBlock.style.maxHeight = "50vh";
+      floatingBlock.style.backgroundColor = "white";
+      floatingBlock.style.borderTop = "1px solid gray";
+      floatingBlock.style.overflowY = "auto";
+      floatingBlock.style.display = "none";
+
+      // Create floating content
+      const floatingContent = document.createElement("div");
+      floatingContent.id = "floatingContent";
+      floatingContent.style.padding = "10px";
+
+      // Create block content
+      const blockContent = document.createElement("div");
+      blockContent.id = "blockContent";
+      blockContent.style.marginBottom = "10px";
+
+      // Append block content to floating content
+      floatingContent.appendChild(blockContent);
+
+      // Create minimize button
+      const minimizeButton = document.createElement("button");
+      minimizeButton.id = "minimizeButton";
+      minimizeButton.textContent = "Minimize";
+      minimizeButton.style.marginRight = "5px";
+      floatingContent.appendChild(minimizeButton);
+
+      // Create maximize button
+      const maximizeButton = document.createElement("button");
+      maximizeButton.id = "maximizeButton";
+      maximizeButton.textContent = "Maximize";
+      maximizeButton.style.marginRight = "5px";
+      floatingContent.appendChild(maximizeButton);
+
+      // Append floating content to floating block
+      floatingBlock.appendChild(floatingContent);
+
+      // Add floating block to the body
+      document.body.appendChild(floatingBlock);
+
+      // Show the floating block
+      floatingBlock.style.display = "block";
+
+      // Update the block content
+      blockContent.innerHTML = `
+        <p>Host: ${'$'}{host}</p>
+        <p>URL: ${'$'}{currentURL}</p>
+        <p>Conditions satisfied: ${'$'}{hasValidHost && hasValidQuery}</p>
+        <li>ValidHost:${'$'}{hasValidHost}</li>
+        <li>ValidQuery:${'$'}{hasValidQuery}</li>
+        <p>Video ID: ${'$'}{videoId}</p>
+        <p>Device Width: ${'$'}{deviceWidth}</p>
+        <p>Device Height: ${'$'}{deviceHeight}</p>
+        <p>Base Dimension: ${'$'}{baseDimension}</p>
+        <p>Poster URL: ${'$'}{posterUrl}</p>
+        <p>Video Element Present: ${'$'}{!!document.querySelector("video")}</p>
+        <p>Attributes Set: ${
+    document.querySelector("video")?.attributes?.poster?.value ? "Yes" : "No"
+}
+        </p>
+        <p>Video Element:</p>
+        <pre>${'$'}{document.querySelector("video")?.outerHTML}</pre>
+      `;
+
+      // Minimize and maximize functionality
+      minimizeButton.addEventListener("click", () => {
+        floatingBlock.style.height = "0";
+      });
+
+      maximizeButton.addEventListener("click", () => {
+        floatingBlock.style.height = "50vh";
+      });
+//    }
+""".trimIndent()
+it.evaluateJavascript(videoPosterCode, null)
         }
     }
 
