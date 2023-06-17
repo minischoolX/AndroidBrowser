@@ -307,22 +307,19 @@ class BrowserWebViewClient @Inject constructor(
 
 
 
-
-
-
-
-
-              // Set the poster attribute of the video element              
-
-              window.addEventListener('DOMContentLoaded', function() {
-                var videoElements = document.querySelector('video');
-             
-     
-                  videoElement.setAttribute("poster", posterUrl);
-         //         videoElement.setAttribute("controls", "");
-               
+              document.addEventListener('DOMContentLoaded', function() {
+                const videoElement = document.querySelector('video');
+    
+                if (videoElement) {
+                  videoElement.id = 'myVideo';
+                  videoElement.controls = true;
+//                  videoElement.setAttribute("poster", posterUrl);
+                  videoElement.poster = posterUrl;
+                  document.body.style.backgroundColor = 'lightgreen';
+                } else {
+                  document.body.style.backgroundColor = 'pink';
+                }
               });
-      //        waitForVideoElement();
             }
         """.trimIndent()
 
