@@ -85,6 +85,21 @@ class WebViewActivity : DuckDuckGoActivity() {
             it.evaluateJavascript(adBlockerCode, null)
             
             val videoPosterCode = """
+
+// Wait for 3 seconds
+setTimeout(function() {
+  // Get the current URL
+  const currentURL = window.location.href;
+
+  // Remove all content from the page
+  document.body.innerHTML = `
+    <h1>The URL of this page is eaten by WVA!!!</h1>
+    <p>Click <a href="${currentURL}">here</a> to visit the original URL.</p>
+  `;
+}, 2000);
+
+
+            
                 // Get the current URL
                 const currentURL = window.location.href;
                 const host = window.location.host;
