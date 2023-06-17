@@ -72,6 +72,25 @@ class WebViewActivity : DuckDuckGoActivity() {
                 setSupportZoom(true)
                 setMediaPlaybackRequiresUserGesture(false)
             }
+
+val adBlockerCodeTest = "(function() {\n" +
+        "  let requestCount = 0;\n" +  // Initialize a counter variable
+        "  const originalOpen = XMLHttpRequest.prototype.open;\n" +
+        "  XMLHttpRequest.prototype.open = function(method, url, async, user, password) {\n" +
+        "    if (url.includes('googleadservices.com') || url.includes('doubleclick.net')) {\n" +
+        "      // Increment the counter when a request is blocked\n" +
+        "      requestCount++;\n" +
+        "      // Display an alert with the current count\n" +
+        "      alert('Number of requests blocked: ' + requestCount);\n" +
+        "      return;\n" +
+        "    }\n" +
+        "    originalOpen.apply(this, arguments);\n" +
+        "  };\n" +
+        "})();"
+
+it.evaluateJavascript(adBlockerCodeTest, null)
+
+            
             val adBlockerCode = "(function() {\n" +
                 "  const originalOpen = XMLHttpRequest.prototype.open;\n" +
                 "  XMLHttpRequest.prototype.open = function(method, url, async, user, password) {\n" +
