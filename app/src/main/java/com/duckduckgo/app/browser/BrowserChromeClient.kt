@@ -34,6 +34,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
+import android.view.ViewGroup
+import android.webkit.WebChromeClient
+import android.webkit.WebView
+import android.widget.Toast
+
 class BrowserChromeClient @Inject constructor(
     private val drm: Drm,
     private val appBuildConfig: AppBuildConfig,
@@ -51,6 +56,10 @@ class BrowserChromeClient @Inject constructor(
         callback: CustomViewCallback?,
     ) {
         Timber.d("on show custom view")
+        
+        val videoDetectionResult = detectVideoElement(view)
+        showToast(view.context, videoDetectionResult)
+        
         if (customView != null) {
             callback?.onCustomViewHidden()
             return
@@ -66,6 +75,38 @@ class BrowserChromeClient @Inject constructor(
         customView = null
     }
 
+    private fun detectVideoElement(view: View): String {
+        if (view is VideoView) {
+            // The entire view is a video
+            return "entire view is a video"
+        } else if (view is WebView) {
+            val webChromeClient = view.webChromeClient
+            if (webChromeClient is BrowserChromeClient) {
+                // Recursively check if video exists within nested iframe(s)
+                val mainWebView = view
+                for (childWebView in mainWebView.webViewRenderProcess.webViews) {
+                    val videoDetectionResult = detectVideoElement(childWebView)
+                    if (videoDetectionResult.isNotEmpty()) {
+                        return "video exists within nested iframe(s) or webview"
+                    }
+                }
+            }
+        } else if (view is ViewGroup) {
+            for (i in 0 until view.childCount) {
+                val childView = view.getChildAt(i)
+                val videoDetectionResult = detectVideoElement(childView)
+                if (videoDetectionResult.isNotEmpty()) {
+                    return "video exists within ViewGroup"
+                }
+            }
+        }
+        return "video doesnt exist"
+    }
+
+    private fun showToast(context: Context, message: String) {
+        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+    }
+    
     override fun onProgressChanged(
         webView: WebView,
         newProgress: Int,
