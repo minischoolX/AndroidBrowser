@@ -62,7 +62,6 @@ import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.widget.Toast
 import java.lang.reflect.Field
-import com.duckduckgo.app.browser.BrowserChromeClient
 
 class BrowserWebViewClient @Inject constructor(
     private val webViewHttpAuthStore: WebViewHttpAuthStore,
@@ -91,7 +90,6 @@ class BrowserWebViewClient @Inject constructor(
     var webViewClientListener: WebViewClientListener? = null
     private var lastPageStarted: String? = null
 
-    private var browserChromeClient: BrowserChromeClient? = null
     private var hasShownToast = false
     private var videoDetectionResult = "empty"
     private val handler = Handler(Looper.getMainLooper())
@@ -99,8 +97,8 @@ class BrowserWebViewClient @Inject constructor(
 
     private fun detectVideoElement(view: View): String {
         if (view is WebView) {
-            val webChromeClient = view.webChromeClient
-            if (webChromeClient is browserChromeClient) {
+            val webViewClient = view.webViewClient
+            if (webViewClient is BrowserWebViewClient) {
                 // Recursively check if video exists within nested iframe(s)
                 val mainWebView = view
                 val childWebViews = getChildWebViews(mainWebView)
