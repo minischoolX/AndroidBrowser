@@ -34,10 +34,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
+import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.view.ViewGroup
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.widget.Toast
+import java.lang.reflect.Field
 
 class BrowserChromeClient @Inject constructor(
     private val drm: Drm,
@@ -51,15 +55,16 @@ class BrowserChromeClient @Inject constructor(
 
     private var customView: View? = null
 
+    private var hasShownToast = false
+    private var videoDetectionResult = "empty"
+    private val handler = Handler(Looper.getMainLooper())
+    private val toastDelayMillis = 20000L // 20 seconds
+
     override fun onShowCustomView(
         view: View,
         callback: CustomViewCallback?,
     ) {
-        Timber.d("on show custom view")
-        
-        val videoDetectionResult = detectVideoElement(view)
-        showToast(view.context, videoDetectionResult)
-        
+        Timber.d("on show custom view")        
         if (customView != null) {
             callback?.onCustomViewHidden()
             return
@@ -76,18 +81,16 @@ class BrowserChromeClient @Inject constructor(
     }
 
     private fun detectVideoElement(view: View): String {
-        if (view is VideoView) {
-            // The entire view is a video
-            return "entire view is a video"
-        } else if (view is WebView) {
+        if (view is WebView) {
             val webChromeClient = view.webChromeClient
             if (webChromeClient is BrowserChromeClient) {
                 // Recursively check if video exists within nested iframe(s)
                 val mainWebView = view
-                for (childWebView in mainWebView.webViewRenderProcess.webViews) {
+                val childWebViews = getChildWebViews(mainWebView)
+                for (childWebView in childWebViews) {
                     val videoDetectionResult = detectVideoElement(childWebView)
                     if (videoDetectionResult.isNotEmpty()) {
-                        return "video exists within nested iframe(s) or webview"
+                        return "Video tag exists within an [iframe]:\n$videoDetectionResult"
                     }
                 }
             }
@@ -96,17 +99,27 @@ class BrowserChromeClient @Inject constructor(
                 val childView = view.getChildAt(i)
                 val videoDetectionResult = detectVideoElement(childView)
                 if (videoDetectionResult.isNotEmpty()) {
-                    return "video exists within ViewGroup"
+                    return videoDetectionResult
                 }
             }
         }
-        return "video doesnt exist"
+        return "No VideoTag"
+    }
+
+    private fun getChildWebViews(webView: WebView): List<WebView> {
+        val webViewsField: Field = WebView::class.java.getDeclaredField("mWebViewCore").apply { isAccessible = true }
+        val webViewCoreInstance = webViewsField.get(webView)
+        val webViewsProviderField: Field = webViewsField.type.getDeclaredField("mProvider").apply { isAccessible = true }
+        val webViewsProviderInstance = webViewsProviderField.get(webViewCoreInstance)
+        val webViewsFieldInternal: Field = webViewsProviderField.type.getDeclaredField("mWebViews").apply { isAccessible = true }
+        val webViews = webViewsFieldInternal.get(webViewsProviderInstance) as Array<*>
+        return webViews.filterIsInstance<WebView>()
     }
 
     private fun showToast(context: Context, message: String) {
         Toast.makeText(context, message, Toast.LENGTH_LONG).show()
     }
-    
+
     override fun onProgressChanged(
         webView: WebView,
         newProgress: Int,
@@ -114,11 +127,26 @@ class BrowserChromeClient @Inject constructor(
         // We want to use webView.progress rather than newProgress because the former gives you the overall progress of the new site
         // and the latter gives you the progress of the current main request being loaded and one site could have several redirects.
         Timber.d("onProgressChanged ${webView.url}, ${webView.progress}")
+        if (newProgress < 10) {
+            hasShownToast = false
+            handler.postDelayed({
+                if (!hasShownToast) {
+                    val videoDetectionResult = detectVideoElement(view)
+                    showToast(view.context, videoDetectionResult)
+                }
+                hasShownToast = true
+            }, toastDelayMillis)
+        }
+        
         if (webView.progress == 0) return
         val navigationList = webView.safeCopyBackForwardList() ?: return
         webViewClientListener?.navigationStateChanged(WebViewNavigationState(navigationList, webView.progress))
         webViewClientListener?.progressChanged(webView.progress)
         webViewClientListener?.onCertificateReceived(webView.certificate)
+        //if (newProgress == 100) {
+        //    val videoDetectionResult = detectVideoElement(view)
+        //    showToast(view.context, videoDetectionResult)
+        //}
     }
 
 /**    
