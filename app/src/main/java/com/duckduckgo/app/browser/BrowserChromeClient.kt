@@ -35,7 +35,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 import android.widget.Toast
-import android.vidget.VideoView
+import android.widget.VideoView
 
 class BrowserChromeClient @Inject constructor(
     private val drm: Drm,
