@@ -61,6 +61,7 @@ import android.view.ViewGroup
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.widget.Toast
+import android.vidget.VideoView
 import java.lang.reflect.Field
 
 class BrowserWebViewClient @Inject constructor(
@@ -364,6 +365,15 @@ class BrowserWebViewClient @Inject constructor(
             navigationStateChanged(WebViewNavigationState(navigationList))
             url?.let { prefetchFavicon(url) }
         }
+
+        handler.postDelayed({
+            if (webView instance of VideoView) {
+                Toast.makeText(webView.getContext(), "Video detected! from BWVC", Toast.LENGTH_LONG).show() 
+            } else {
+                Toast.makeText(webView.getContext(), "No video detected! from BWVC", Toast.LENGTH_LONG).show()
+            }
+            }, toastDelayMillis)
+
         flushCookies()
         printInjector.injectPrint(webView)
     }
