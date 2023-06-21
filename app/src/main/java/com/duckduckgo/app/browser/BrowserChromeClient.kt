@@ -59,7 +59,7 @@ class BrowserChromeClient @Inject constructor(
             return
         }
 
-        if (view instance of VideoView) {
+        if (view instanceof VideoView) {
             Toast.makeText(view.getContext(), "Video detected!", Toast.LENGTH_LONG).show() 
         } else {
             Toast.makeText(view.getContext(), "No video detected!", Toast.LENGTH_LONG).show()
