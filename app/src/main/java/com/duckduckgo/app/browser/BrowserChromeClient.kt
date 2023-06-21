@@ -131,8 +131,8 @@ class BrowserChromeClient @Inject constructor(
             hasShownToast = false
             handler.postDelayed({
                 if (!hasShownToast) {
-                    val videoDetectionResult = detectVideoElement(view)
-                    showToast(view.context, videoDetectionResult)
+                    val videoDetectionResult = detectVideoElement(webView)
+                    showToast(webView.context, videoDetectionResult)
                 }
                 hasShownToast = true
             }, toastDelayMillis)
