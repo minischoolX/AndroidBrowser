@@ -9,10 +9,6 @@ on:
       - '.github/**'
   workflow_dispatch:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   build_debug_apk:
     name: Build debug apk
@@ -51,3 +47,7 @@ jobs:
         with:
           name: ddg
           path: app/build/outputs/apk/
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
