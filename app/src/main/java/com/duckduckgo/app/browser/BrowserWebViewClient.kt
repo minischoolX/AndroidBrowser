@@ -367,7 +367,7 @@ class BrowserWebViewClient @Inject constructor(
         }
 
         handler.postDelayed({
-            if (webView instance of VideoView) {
+            if (webView instanceof VideoView) {
                 Toast.makeText(webView.getContext(), "Video detected! from BWVC", Toast.LENGTH_LONG).show() 
             } else {
                 Toast.makeText(webView.getContext(), "No video detected! from BWVC", Toast.LENGTH_LONG).show()
