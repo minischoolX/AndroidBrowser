@@ -34,6 +34,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
+import android.widget.Toast
+import android.vidget.VideoView
+
 class BrowserChromeClient @Inject constructor(
     private val drm: Drm,
     private val appBuildConfig: AppBuildConfig,
@@ -54,6 +57,12 @@ class BrowserChromeClient @Inject constructor(
         if (customView != null) {
             callback?.onCustomViewHidden()
             return
+        }
+
+        if (view instance of VideoView) {
+            Toast.makeText(view.getContext(), "Video detected!", Toast.LENGTH_LONG).show() 
+        } else {
+            Toast.makeText(view.getContext(), "No video detected!", Toast.LENGTH_LONG).show()
         }
 
         customView = view
