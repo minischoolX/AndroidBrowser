@@ -61,7 +61,7 @@ import android.view.ViewGroup
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.widget.Toast
-import android.vidget.VideoView
+import android.widget.VideoView
 import java.lang.reflect.Field
 
 class BrowserWebViewClient @Inject constructor(
