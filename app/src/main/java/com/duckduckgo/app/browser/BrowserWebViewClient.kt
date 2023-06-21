@@ -324,10 +324,10 @@ class BrowserWebViewClient @Inject constructor(
     ) {
         Timber.v("onPageStarted webViewUrl: ${webView.url} URL: $url")
 
-        handler.postDelayed({
-            val videoDetectionResult = detectVideoElement(webView)
-            showToast(webView.context, videoDetectionResult)
-        }, toastDelayMillis)
+//        handler.postDelayed({
+//            val videoDetectionResult = detectVideoElement(webView)
+//            showToast(webView.context, videoDetectionResult)
+//        }, toastDelayMillis)
 
         url?.let {
             autoconsent.injectAutoconsent(webView, url)
