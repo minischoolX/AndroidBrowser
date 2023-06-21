@@ -53,6 +53,17 @@ import javax.inject.Inject
 import kotlinx.coroutines.*
 import timber.log.Timber
 
+import android.view.View
+import android.content.Context
+import android.os.Handler
+import android.os.Looper
+import android.view.ViewGroup
+import android.webkit.WebChromeClient
+import android.webkit.WebView
+import android.widget.Toast
+import java.lang.reflect.Field
+import com.duckduckgo.app.browser.BrowserChromeClient
+
 class BrowserWebViewClient @Inject constructor(
     private val webViewHttpAuthStore: WebViewHttpAuthStore,
     private val trustedCertificateStore: TrustedCertificateStore,
@@ -79,6 +90,52 @@ class BrowserWebViewClient @Inject constructor(
 
     var webViewClientListener: WebViewClientListener? = null
     private var lastPageStarted: String? = null
+
+    private var browserChromeClient: BrowserChromeClient? = null
+    private var hasShownToast = false
+    private var videoDetectionResult = "empty"
+    private val handler = Handler(Looper.getMainLooper())
+    private val toastDelayMillis = 20000L // 20 seconds
+
+    private fun detectVideoElement(view: View): String {
+        if (view is WebView) {
+            val webChromeClient = view.webChromeClient
+            if (webChromeClient is browserChromeClient) {
+                // Recursively check if video exists within nested iframe(s)
+                val mainWebView = view
+                val childWebViews = getChildWebViews(mainWebView)
+                for (childWebView in childWebViews) {
+                    val videoDetectionResult = detectVideoElement(childWebView)
+                    if (videoDetectionResult.isNotEmpty()) {
+                        return "Video tag exists within an [iframe]:\n$videoDetectionResult"
+                    }
+                }
+            }
+        } else if (view is ViewGroup) {
+            for (i in 0 until view.childCount) {
+                val childView = view.getChildAt(i)
+                val videoDetectionResult = detectVideoElement(childView)
+                if (videoDetectionResult.isNotEmpty()) {
+                    return videoDetectionResult
+                }
+            }
+        }
+        return "No VideoTag"
+    }
+
+    private fun getChildWebViews(webView: WebView): List<WebView> {
+        val webViewsField: Field = WebView::class.java.getDeclaredField("mWebViewCore").apply { isAccessible = true }
+        val webViewCoreInstance = webViewsField.get(webView)
+        val webViewsProviderField: Field = webViewsField.type.getDeclaredField("mProvider").apply { isAccessible = true }
+        val webViewsProviderInstance = webViewsProviderField.get(webViewCoreInstance)
+        val webViewsFieldInternal: Field = webViewsProviderField.type.getDeclaredField("mWebViews").apply { isAccessible = true }
+        val webViews = webViewsFieldInternal.get(webViewsProviderInstance) as Array<*>
+        return webViews.filterIsInstance<WebView>()
+    }
+
+    private fun showToast(context: Context, message: String) {
+        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+    }
 
     /**
      * This is the new method of url overriding available from API 24 onwards
@@ -268,6 +325,11 @@ class BrowserWebViewClient @Inject constructor(
         favicon: Bitmap?,
     ) {
         Timber.v("onPageStarted webViewUrl: ${webView.url} URL: $url")
+
+        handler.postDelayed({
+            val videoDetectionResult = detectVideoElement(webView)
+            showToast(webView.context, videoDetectionResult)
+        }, toastDelayMillis)
 
         url?.let {
             autoconsent.injectAutoconsent(webView, url)
